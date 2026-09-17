@@ -1,0 +1,50 @@
+name: Pasada
+options:
+  bundleIdPrefix: com.clarence.pasada
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+schemes:
+  Pasada:
+    build:
+      targets:
+        Pasada: all
+    run:
+      config: Debug
+targets:
+  Pasada:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - Shared
+      - path: Resources
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.clarence.pasada
+        # This project intentionally has no app-icon asset yet. Keep the placard
+        # asset catalog from making Xcode require a non-existent AppIcon set.
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: App/Info.plist
+    dependencies:
+      - target: PasadaWidget
+        embed: true
+  PasadaWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Widget
+      - Shared
+      - path: Resources
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.clarence.pasada.PasadaWidget
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Widget/Info.plist
+        SKIP_INSTALL: YES
