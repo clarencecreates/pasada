@@ -373,6 +373,15 @@ struct ContentView: View {
     /// point most centrally wins, not whichever was drawn last.
     private func layerID(at point: CGPoint, in size: CGSize) -> UUID? {
         let candidates = [sign.layers.reversed().map(\.id), sign.imageLayers.reversed().map(\.id)]
+        // A finger on a layer's actual drawn area picks the one drawn on top,
+        // so stacked lines behave the way they look.
+        for ids in candidates {
+            for id in ids {
+                guard let frame = contentFrame(of: id, in: size) else { continue }
+                if targetContains(point, target: frame) { return id }
+            }
+        }
+        // Otherwise fall back to the padded touch areas, most central first.
         for ids in candidates {
             var best: (id: UUID, depth: CGFloat)?
             for id in ids {
@@ -566,7 +575,7 @@ struct ContentView: View {
             fontFamily: sourceLayer?.fontFamily ?? .cubao,
             size: sourceLayer?.size ?? 0.36,
             x: 0.5,
-            y: 0.5,
+            y: freeSpotY(),
             color: sourceLayer?.color ?? .lime,
             gradientColor: sourceLayer?.gradientColor ?? .pink,
             usesGradient: sourceLayer?.usesGradient ?? false,
@@ -622,6 +631,17 @@ struct ContentView: View {
         }
         recordCurrentState()
         deleteTick += 1
+    }
+
+    /// A vertical spot for new text that isn't already taken by another
+    /// line's centre, so new lines never land exactly on top of each other.
+    private func freeSpotY() -> Double {
+        let taken = sign.layers.map(\.y)
+        let candidates: [Double] = [0.5, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6]
+        return candidates.first { y in taken.allSatisfy { abs($0 - y) > 0.08 } }
+            ?? candidates.max { a, b in
+                (taken.map { abs($0 - a) }.min() ?? 1) < (taken.map { abs($0 - b) }.min() ?? 1)
+            } ?? 0.5
     }
 
     private func handleCanvasBackgroundTap() {
