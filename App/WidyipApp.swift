@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct PasadaApp: App {
+struct WidyipApp: App {
     var body: some Scene {
         WindowGroup { PlacardLibraryView() }
     }
