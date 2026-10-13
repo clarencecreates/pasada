@@ -286,7 +286,13 @@ enum SignStore {
     static func save(_ sign: SignDraft) {
         var copy = sign
         copy.savedAt = .now
-        guard let data = try? JSONEncoder().encode(copy) else { return }
+        let data: Data
+        do {
+            data = try JSONEncoder().encode(copy)
+        } catch {
+            Log.storage.fault("Equipped sign failed to encode: \(String(describing: error), privacy: .public)")
+            return
+        }
         defaults.set(data, forKey: key)
         // WidgetKit may reload immediately after a placard is chosen. Flush the
         // shared suite first so the extension reads this exact draft, not its cache.
@@ -303,11 +309,24 @@ struct Placard: Codable, Identifiable, Equatable {
 }
 
 enum PlacardStore {
-    private static let key = "placard-library"
-    private static let defaults = UserDefaults.standard
+    static let key = "placard-library"
+    /// Replaceable so tests can use an isolated suite.
+    static var defaults = UserDefaults.standard
 
     static func load() -> [Placard] {
-        if let data = defaults.data(forKey: key), let placards = try? JSONDecoder().decode([Placard].self, from: data), !placards.isEmpty {
+        guard let data = defaults.data(forKey: key) else { return [] }
+        let decoded: [Placard]
+        do {
+            decoded = try JSONDecoder().decode([Placard].self, from: data)
+        } catch {
+            // Never let an unreadable library look empty: the next save would
+            // overwrite it. Keep the raw bytes aside so they can be recovered.
+            Log.storage.fault("Placard library failed to decode: \(String(describing: error), privacy: .public)")
+            defaults.set(data, forKey: key + "-unreadable-backup")
+            return []
+        }
+        let placards = decoded
+        if !placards.isEmpty {
             let upgraded = placards.map { placard in
                 var copy = placard
                 // PSD placards become ordinary live text once, here, so the
@@ -324,7 +343,13 @@ enum PlacardStore {
     }
 
     static func save(_ placards: [Placard]) {
-        guard let data = try? JSONEncoder().encode(placards) else { return }
+        let data: Data
+        do {
+            data = try JSONEncoder().encode(placards)
+        } catch {
+            Log.storage.fault("Placard library failed to encode: \(String(describing: error), privacy: .public)")
+            return
+        }
         defaults.set(data, forKey: key)
     }
 }
