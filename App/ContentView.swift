@@ -87,7 +87,6 @@ struct ContentView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) { formattingBar }
             // The top stays clear for the placard; only a way back floats there.
             .overlay(alignment: .top) { topControls }
-            .background(NavigationBackSwipeDisabler())
             .onChange(of: photoSelection) { _, item in
                 guard let item else { return }
                 Task { await addImage(from: item) }
@@ -654,14 +653,17 @@ struct ContentView: View {
 
     private var topControls: some View {
         HStack {
-            Button(action: close) {
-                Image(systemName: "chevron.backward")
-                    .font(.system(size: 17, weight: .semibold))
-                    .frame(width: 44, height: 44)
+            HStack(spacing: 0) {
+                Button(action: close) {
+                    Image(systemName: "chevron.backward")
+                        .font(.system(size: 17, weight: .semibold))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Back to placards")
             }
-            .buttonStyle(.plain)
             .editorGlass(Circle())
-            .accessibilityLabel("Back to placards")
 
             Spacer()
 
@@ -781,58 +783,6 @@ struct ContentView: View {
             },
             set: { newValue in update(id) { gradient ? ($0.gradientColor = SignColor(newValue)) : ($0.color = SignColor(newValue)) } }
         )
-    }
-}
-
-/// Reserve the canvas's left edge for text manipulation rather than navigation.
-private struct NavigationBackSwipeDisabler: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> GestureController {
-        GestureController()
-    }
-
-    func updateUIViewController(_ uiViewController: GestureController, context: Context) {}
-
-    final class GestureController: UIViewController {
-        private var popGestures: [UIGestureRecognizer] = []
-
-        override func viewDidAppear(_ animated: Bool) {
-            super.viewDidAppear(animated)
-            DispatchQueue.main.async { [weak self] in self?.disableBackSwipes() }
-        }
-
-        override func viewDidDisappear(_ animated: Bool) {
-            super.viewDidDisappear(animated)
-            restoreBackSwipes()
-        }
-
-        deinit {
-            restoreBackSwipes()
-        }
-
-        private func disableBackSwipes() {
-            guard popGestures.isEmpty else { return }
-            let navigationControllers = navigationControllers(from: view.window?.rootViewController)
-            popGestures = navigationControllers.compactMap(\.interactivePopGestureRecognizer)
-            popGestures.forEach { $0.isEnabled = false }
-        }
-
-        private func restoreBackSwipes() {
-            popGestures.forEach { $0.isEnabled = true }
-            popGestures.removeAll()
-        }
-
-        private func navigationControllers(from controller: UIViewController?) -> [UINavigationController] {
-            guard let controller else { return [] }
-            var found = (controller as? UINavigationController)
-                .map { [$0] } ?? []
-            for child in controller.children {
-                found += navigationControllers(from: child)
-            }
-            if let presented = controller.presentedViewController {
-                found += navigationControllers(from: presented)
-            }
-            return found
-        }
     }
 }
 
@@ -1535,7 +1485,7 @@ private extension View {
     /// Liquid Glass on iOS 26, frosted material with a hairline before that.
     @ViewBuilder func editorGlass<S: Shape>(_ shape: S) -> some View {
         if #available(iOS 26.0, *) {
-            self.glassEffect(.regular.interactive(), in: shape)
+            self.background { Color.clear.glassEffect(.regular, in: shape).allowsHitTesting(false) }
         } else {
             self
                 .background(.regularMaterial, in: shape)

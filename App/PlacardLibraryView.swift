@@ -58,18 +58,17 @@ struct PlacardLibraryView: View {
         .background(Color.widyipBackground.ignoresSafeArea())
         .overlay {
             if let selected = editingPlacard {
-                NavigationStack {
-                    ContentView(
-                        placard: binding(for: selected.id),
-                        onClose: {
-                            withAnimation(.easeInOut(duration: 0.28)) {
-                                editingPlacard = nil
-                            }
+                // No NavigationStack: its hidden bar still swallowed taps at the
+                // top of the screen, where the editor's back button lives.
+                ContentView(
+                    placard: binding(for: selected.id),
+                    onClose: {
+                        withAnimation(.easeInOut(duration: 0.28)) {
+                            editingPlacard = nil
                         }
-                    )
-                }
+                    }
+                )
                 .environment(\.colorScheme, .dark)
-                .ignoresSafeArea()
                 .transition(.move(edge: .trailing))
                 .zIndex(10)
             }

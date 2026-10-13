@@ -1,0 +1,139 @@
+{
+  "artboard": {
+    "height": 288,
+    "width": 576
+  },
+  "background": "yellowBayad",
+  "format": "com.cyrillepardinas.widyip.placard-template",
+  "generator": "YellowArc 3.psd",
+  "layers": [
+    {
+      "bold": false,
+      "center": {
+        "x": 47.933,
+        "y": 132.399
+      },
+      "color": "#FF3131FF",
+      "curve": 0,
+      "fontFamily": "quiapo",
+      "fontSize": 170.0,
+      "fontStyle": "regular",
+      "gradient": {
+        "enabled": false,
+        "to": "#FF3131FF"
+      },
+      "letterSpacing": 0,
+      "lineSpacing": 0,
+      "rotation": -25.805,
+      "scaleX": 1,
+      "text": "B"
+    },
+    {
+      "bold": false,
+      "center": {
+        "x": 182.39,
+        "y": 110.924
+      },
+      "color": "#FF3131FF",
+      "curve": 0,
+      "fontFamily": "quiapo",
+      "fontSize": 117.0,
+      "fontStyle": "regular",
+      "gradient": {
+        "enabled": false,
+        "to": "#FF3131FF"
+      },
+      "letterSpacing": 0,
+      "lineSpacing": 0,
+      "rotation": -13.849,
+      "scaleX": 1,
+      "text": "AYAD"
+    },
+    {
+      "bold": false,
+      "center": {
+        "x": 396.271,
+        "y": 110.009
+      },
+      "color": "#FF3131FF",
+      "curve": 0,
+      "fontFamily": "quiapo",
+      "fontSize": 117.0,
+      "fontStyle": "regular",
+      "gradient": {
+        "enabled": false,
+        "to": "#FF3131FF"
+      },
+      "letterSpacing": 0,
+      "lineSpacing": 0,
+      "rotation": 15.387,
+      "scaleX": 1,
+      "text": "MUN"
+    },
+    {
+      "bold": false,
+      "center": {
+        "x": 524.243,
+        "y": 125.626
+      },
+      "color": "#FF3131FF",
+      "curve": 0,
+      "fontFamily": "quiapo",
+      "fontSize": 170.0,
+      "fontStyle": "regular",
+      "gradient": {
+        "enabled": false,
+        "to": "#FF3131FF"
+      },
+      "letterSpacing": 0,
+      "lineSpacing": 0,
+      "rotation": 24.541,
+      "scaleX": 1,
+      "text": "A"
+    },
+    {
+      "bold": false,
+      "center": {
+        "x": 206.267,
+        "y": 232.621
+      },
+      "color": "#000000FF",
+      "curve": 0,
+      "fontFamily": "quiapo",
+      "fontSize": 90.0,
+      "fontStyle": "regular",
+      "gradient": {
+        "enabled": false,
+        "to": "#000000FF"
+      },
+      "letterSpacing": 0,
+      "lineSpacing": 0,
+      "rotation": -11.168,
+      "scaleX": 1,
+      "text": "BAGO"
+    },
+    {
+      "bold": false,
+      "center": {
+        "x": 375.636,
+        "y": 233.649
+      },
+      "color": "#000000FF",
+      "curve": 0,
+      "fontFamily": "quiapo",
+      "fontSize": 90.0,
+      "fontStyle": "regular",
+      "gradient": {
+        "enabled": false,
+        "to": "#000000FF"
+      },
+      "letterSpacing": 0,
+      "lineSpacing": 0,
+      "rotation": 11.154,
+      "scaleX": 1,
+      "text": "BABA"
+    }
+  ],
+  "name": "Bayad Muna",
+  "version": 1
+}
