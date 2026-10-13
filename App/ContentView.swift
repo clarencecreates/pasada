@@ -49,8 +49,11 @@ struct ContentView: View {
         // canvas never swaps a raster preview for live text mid-edit.
         let migratedSign = placard.wrappedValue.sign.applyingImportedPSDLayout().bakingImportedPSDType()
         _sign = State(initialValue: migratedSign)
-        _history = State(initialValue: [migratedSign])
-        _historyIndex = State(initialValue: 0)
+        // Reopening a placard resumes its undo history from earlier in this
+        // app session, as long as nothing changed it in the meantime.
+        let saved = EditHistory.restore(for: placard.wrappedValue.id, current: migratedSign)
+        _history = State(initialValue: saved?.stack ?? [migratedSign])
+        _historyIndex = State(initialValue: saved?.index ?? 0)
     }
 
     var body: some View {
@@ -87,6 +90,9 @@ struct ContentView: View {
             .safeAreaInset(edge: .bottom, spacing: 0) { formattingBar }
             // The top stays clear for the placard; only a way back floats there.
             .overlay(alignment: .top) { topControls }
+            .onChange(of: focusedLayer) { old, _ in
+                if old != nil { recordCurrentState() }
+            }
             .onChange(of: photoSelection) { _, item in
                 guard let item else { return }
                 Task { await addImage(from: item) }
@@ -219,10 +225,6 @@ struct ContentView: View {
                         .presentationCompactAdaptation(.popover)
                     }
 
-                    Button(action: addTextLayer) {
-                        EditorToolLabel(symbol: "plus.square", title: "Add text", showTitle: focusedLayer != id)
-                    }
-                    .transition(.opacity)
                 }
                 .padding(.leading, 8)
                 .padding(.vertical, 7)
@@ -283,7 +285,9 @@ struct ContentView: View {
                         for: layer,
                         size: CanvasTypography.pointSize(layer.size, canvasWidth: proxy.size.width)
                     )
-                    NativeTextSelectionEditor(text: binding(for: layer.id, \.text), font: editorFont) {
+                    // Keystrokes edit live; the whole burst becomes one undo step
+                    // when typing ends (see the focusedLayer onChange).
+                    NativeTextSelectionEditor(text: liveBinding(for: layer.id, \.text), font: editorFont) {
                         self.focusedLayer = nil
                     }
                     .frame(width: textTarget.size.width, height: textTarget.size.height)
@@ -639,6 +643,7 @@ struct ContentView: View {
     /// widget only when this placard is the equipped one.
     private func save() {
         placard.sign = sign
+        EditHistory.store(history, index: historyIndex, for: placard.id)
     }
 
     private func close() {
@@ -724,12 +729,18 @@ struct ContentView: View {
         if history[historyIndex] == sign { return }
         history = Array(history.prefix(historyIndex + 1))
         history.append(sign)
+        // Bounded so a long session can't grow without limit.
+        if history.count > EditHistory.limit {
+            history.removeFirst(history.count - EditHistory.limit)
+        }
         historyIndex = history.count - 1
         // Every committed step is saved, so there is no Save button to forget.
         save()
     }
 
     private func undo() {
+        // Commit anything in progress (such as typing) so undo reverts it in one step.
+        recordCurrentState()
         guard historyIndex > 0 else { return }
         historyIndex -= 1
         sign = history[historyIndex]
@@ -1515,5 +1526,24 @@ private struct PlacardGlow: View {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// Undo history per placard, kept in memory for the app session so leaving and
+/// reopening a placard doesn't lose it.
+@MainActor
+enum EditHistory {
+    static let limit = 100
+    private static var entries: [UUID: (stack: [SignDraft], index: Int)] = [:]
+
+    static func store(_ stack: [SignDraft], index: Int, for id: UUID) {
+        entries[id] = (stack, index)
+    }
+
+    /// The saved history, if its current step still matches the placard.
+    static func restore(for id: UUID, current: SignDraft) -> (stack: [SignDraft], index: Int)? {
+        guard let entry = entries[id], entry.stack.indices.contains(entry.index),
+              entry.stack[entry.index] == current else { return nil }
+        return entry
     }
 }
